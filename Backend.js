@@ -89,14 +89,15 @@ function Start() {
       res.json({ status: 500, message: "Error logging in, try again later" });
     }
   });
-  app.get("/logout", (req, res) => {
-    req.session.destroy((err) => {
-      if (err) {
-        return res.status(500).send("Error logging out");
-      }
-      res.send("Logged out successfully!");
-    });
+app.post("/logout", (req, res) => {
+  res.clearCookie("_secretkey", {
+    httpOnly: true,
+    secure: true,   // use true in production (HTTPS)
+    sameSite: 'none',
+    path: '/'
   });
+  return res.json({ message: "Logged out successfully" });
+});
   // Example route to check if a user is logged in
   app.get("/check-session", (req, res) => {
     const _secretkey = req.cookies._secretkey;
