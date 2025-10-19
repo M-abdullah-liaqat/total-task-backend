@@ -75,7 +75,6 @@ function Start() {
           httpOnly: true,
           secure: false,   // localhost -> false
           sameSite: 'lax',
-            path: '/',// or 'none' if you're using cross-domain
         });
           return res.json({ status: 200, message: "Login Successful" });
         } else {
