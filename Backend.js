@@ -74,7 +74,7 @@ function Start() {
           res.cookie("_secretkey", token,{
               httpOnly: true,
               secure: false,       // frontend is http://localhost
-              sameSite: 'none',    // required for cross-site cookie
+              sameSite: 'lax',    // required for cross-site cookie
               path: '/',
 
         });
