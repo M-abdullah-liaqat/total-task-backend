@@ -71,7 +71,11 @@ function Start() {
             username: data.username,
             email: data.email,
           });
-          res.cookie("_secretkey", token);
+          res.cookie("_secretkey", token,{
+          httpOnly: true,
+          secure: false,   // localhost -> false
+          sameSite: 'lax', // or 'none' if you're using cross-domain
+        });
           return res.json({ status: 200, message: "Login Successful" });
         } else {
           return res.json({ status: 400, message: "Invalid Password" });
