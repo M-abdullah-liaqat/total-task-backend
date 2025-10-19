@@ -72,9 +72,11 @@ function Start() {
             email: data.email,
           });
           res.cookie("_secretkey", token,{
-          httpOnly: true,
-          secure: false,   // localhost -> false
-          sameSite: 'lax',
+              httpOnly: true,
+              secure: false,       // frontend is http://localhost
+              sameSite: 'none',    // required for cross-site cookie
+              path: '/',
+
         });
           return res.json({ status: 200, message: "Login Successful" });
         } else {
