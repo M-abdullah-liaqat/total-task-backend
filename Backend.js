@@ -96,6 +96,7 @@ function Start() {
   app.get("/check-session", (req, res) => {
     const _secretkey = req.cookies._secretkey;
     const user = getUser(_secretkey);
+    console.log(user)
     if (_secretkey) {
       return res.json({
         status: 200,
