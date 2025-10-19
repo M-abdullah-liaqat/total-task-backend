@@ -73,10 +73,9 @@ function Start() {
           });
           res.cookie("_secretkey", token,{
               httpOnly: true,
-              secure: false,       // frontend is http://localhost
-              sameSite: 'lax',    // required for cross-site cookie
-              path: '/',
-
+              secure: true,       // ✅ must be true in production
+              sameSite: "none",   // ✅ required for cross-site cookies
+              path: "/",
         });
           return res.json({ status: 200, message: "Login Successful" });
         } else {
