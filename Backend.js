@@ -9,7 +9,8 @@ const { AddMember } = require("./actions/addMember");
 const { DeleteTeam, UpdateTeam } = require("./actions/teamOPs");
 const { CreateTask, UpdateTask, DeleteTask } = require("./actions/taskOPs");
 const { setUser, getUser } = require("./service");
-
+const app = express();
+const port = 3000;
 app.use(
   cors({
     origin: "http://localhost:5173", // or your production frontend
@@ -24,8 +25,6 @@ app.options(
     credentials: true,
   })
 );
-const app = express();
-const port = 3000;
 
 app.use(bodyParser.json());
 app.use(cookieParser());
