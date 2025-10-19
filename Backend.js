@@ -2,8 +2,6 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const DB = require("./db"); // Assuming this is correct
-const app = express();
-const port = 3000;
 const { hashPassword, comparePassword } = require("./Bcryptd");
 const cors = require("cors");
 const { v4 } = require("uuid");
@@ -12,14 +10,22 @@ const { DeleteTeam, UpdateTeam } = require("./actions/teamOPs");
 const { CreateTask, UpdateTask, DeleteTask } = require("./actions/taskOPs");
 const { setUser, getUser } = require("./service");
 
-// --- START: Key Changes for CORS and Cookies ---
-const corsOptions = {
-  // Replace with the URL of your front-end application
-  origin: "http://localhost:5173",
-  credentials: true, // This is essential for sending cookies with cross-origin requests
-};
-
-app.use(cors(corsOptions));
+app.use(
+  cors({
+    origin: "http://localhost:5173", // or your production frontend
+    credentials: true,
+  })
+);
+// ✅ 2. Handle preflight requests globally
+app.options(
+  "*",
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
+const app = express();
+const port = 3000;
 
 app.use(bodyParser.json());
 app.use(cookieParser());
