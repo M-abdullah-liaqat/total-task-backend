@@ -1,8 +1,11 @@
 const DB = require("../db");
+const {getUser} = require("../service")
 
 async function AddMember(req, res) {
   const { members, Id } = req.body;
-  if (req.session.userId) {
+  const _secretkey = req.cookies._secretkey;
+    const USER = getUser(_secretkey);
+  if (USER) {
     try {
         const realMembers= JSON.stringify(members)
       const Response = await DB("teams").where({teamId :Id}).update({

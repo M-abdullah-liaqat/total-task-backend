@@ -1,15 +1,16 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
 const DB = require("./db"); // Assuming this is correct
 const app = express();
 const port = 3000;
 const { hashPassword, comparePassword } = require("./Bcryptd");
 const cors = require("cors");
-const session = require("express-session");
 const { v4 } = require("uuid");
 const { AddMember } = require("./actions/addMember");
 const { DeleteTeam, UpdateTeam } = require("./actions/teamOPs");
 const { CreateTask, UpdateTask, DeleteTask } = require("./actions/taskOPs");
+const { setUser, getUser } = require("./service");
 
 // --- START: Key Changes for CORS and Cookies ---
 const corsOptions = {
@@ -21,28 +22,14 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use(bodyParser.json());
-
-app.use(
-  session({
-    secret: "your_secret_key_here",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 100 * 60 * 60 * 1000,
-      httpOnly: true,
-      secure: false, // ❌ false for localhost (HTTPS only if true)
-      // Ensure client-side JavaScript can't access the cookie
-      sameSite: "lax", // Relaxed same-site enforcement (often required for local dev)
-      // For production HTTPS: sameSite: 'none', secure: true
-    },
-  })
-);
-// --- END: Key Changes ---
+app.use(cookieParser());
 
 function Start() {
   app.get("/", (req, res) => {
-    if (req.session.userId) {
-      res.json({ hello: "Hello World! ", data: req.session.username });
+    const _secretkey = req.cookies._secretkey;
+    const user = getUser(_secretkey);
+    if (user) {
+      res.json({ hello: "Hello World! ", username: user.username });
     } else {
       res.json({ status: "unauterized" });
     }
@@ -81,18 +68,13 @@ function Start() {
       if (data) {
         const match = await comparePassword(password, data.password);
         if (match) {
-          req.session.userId = data.id; // from DB
-          req.session.username = data.username;
-          req.session.email = data.email;
-
-          // You might need to manually save if you use `res.json` before the response naturally ends
-          req.session.save((err) => {
-            if (err) {
-              console.error("Error saving session:", err);
-              return res.json({ status: 500, message: "Error saving session" });
-            }
-            return res.json({ status: 200, message: "Login Successful" });
+          const token = setUser({
+            id: data.id,
+            username: data.username,
+            email: data.email,
           });
+          res.cookie("_secretkey", token);
+          return res.json({ status: 200, message: "Login Successful" });
         } else {
           return res.json({ status: 400, message: "Invalid Password" });
         }
@@ -114,12 +96,14 @@ function Start() {
   });
   // Example route to check if a user is logged in
   app.get("/check-session", (req, res) => {
-    if (req.session.userId) {
+    const _secretkey = req.cookies._secretkey;
+    const user = getUser(_secretkey);
+    if (_secretkey) {
       return res.json({
         status: 200,
         sessionData: {
-          username: req.session.username,
-          email: req.session.email,
+          username: user.username,
+          email: user.email,
         },
       });
     }
@@ -129,8 +113,10 @@ function Start() {
     });
   });
   app.post("/createteams", async (req, res) => {
+    const _secretkey = req.cookies._secretkey;
+    const USER = getUser(_secretkey);
     const { teamName, organization, createdBy, members } = await req.body;
-    if (req.session.userId) {
+    if (USER) {
       if (!teamName || !organization || !createdBy || !members) {
         return res.json({ status: 400, message: "Missing required fields" });
       }
@@ -159,9 +145,11 @@ function Start() {
     });
   });
   app.get("/get/team", async (req, res) => {
-    if (req.session.userId) {
+    const _secretkey = req.cookies._secretkey;
+    const USER = getUser(_secretkey);
+    if (USER) {
       const exect = await DB("teams").whereRaw(`members @> ?`, [
-        `[{"email": "${req.session.email}"}]`,
+        `[{"email": "${USER.email}"}]`,
       ]);
       const teams = await DB("teams").select("*");
       return res.json(exect);
@@ -173,12 +161,14 @@ function Start() {
   });
   app.get("/get/task/:Method", async (req, res) => {
     const { Method } = req.params;
-    console.log(Method)
-    if (req.session.userId) {
+    const _secretkey = req.cookies._secretkey;
+    const USER = getUser(_secretkey);
+    console.log(Method);
+    if (USER) {
       if (Method === "byEmail") {
-        console.log("yes Email")
+        console.log("yes Email");
         const teams = await DB("tasks").where({
-          assignedTo: req.session.email,
+          assignedTo: USER.email,
         });
         return res.json(teams);
       } else {
@@ -195,8 +185,8 @@ function Start() {
   app.delete("/deleteteam", DeleteTeam);
   app.patch("/updateteam", UpdateTeam);
   app.post("/createtask", CreateTask);
-  app.patch("/updatetask/:method", UpdateTask)
-  app.delete("/deleteTask", DeleteTask)
+  app.patch("/updatetask/:method", UpdateTask);
+  app.delete("/deleteTask", DeleteTask);
   app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
   });

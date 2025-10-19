@@ -1,8 +1,12 @@
 const DB = require("../db");
 const { v4 } = require("uuid");
+const {getUser} = require("../service")
+
 async function CreateTask(req, res) {
   const { allData } = req.body;
-  if (req.session.userId) {
+  const _secretkey = req.cookies._secretkey;
+    const USER = getUser(_secretkey);
+  if (USER) {
     if (
       !allData.taskTitle ||
       !allData.projectName ||
@@ -32,8 +36,10 @@ async function CreateTask(req, res) {
 
 async function UpdateTask(req, res) {
   const { method } = req.params;
+  const _secretkey = req.cookies._secretkey;
+    const USER = getUser(_secretkey);
   const { status, taskTitle, projectName, Id } = req.body;
-  if (req.session.userId) {
+  if (USER) {
     try {
       if (method === "status") {
         await DB("tasks").where({ taskId: Id }).update({
@@ -63,7 +69,9 @@ async function UpdateTask(req, res) {
 }
 async function DeleteTask(req, res) {
   const { Id } = req.body;
-  if (req.session.userId) {
+  const _secretkey = req.cookies._secretkey;
+    const USER = getUser(_secretkey);
+  if (USER) {
     try {
       await DB("tasks").where({ taskId: Id }).del();
       return res.json({ status: 200, message: "Task Deleted" });
