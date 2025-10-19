@@ -13,7 +13,7 @@ const app = express();
 const port = 3000;
 app.use(
   cors({
-    origin: "http://localhost:5173", // or your production frontend
+    origin: "https://total-task-eta.vercel.app", // or your production frontend
     credentials: true,
   })
 );
