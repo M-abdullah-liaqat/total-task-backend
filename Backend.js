@@ -22,7 +22,7 @@ app.use(
 app.use(bodyParser.json());
 app.use(cookieParser());
 
-function Start() {
+function handler() {
   app.get("/", (req, res) => {
     const _secretkey = req.cookies._secretkey;
     const user = getUser(_secretkey);
@@ -197,4 +197,4 @@ app.post("/logout", (req, res) => {
   });
 }
 
-Start();
+module.exports = { handler }
